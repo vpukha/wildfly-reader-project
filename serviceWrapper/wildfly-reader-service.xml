@@ -1,0 +1,29 @@
+<configuration>
+    <!-- Service metadata -->
+    <id>wildfly-reader-service</id>
+    <name>WildFly Reader</name>
+    <description>Simpleway WildFly Reader Service, (c) Simpleway Europe a.s.</description>
+
+    <!-- logging -->
+    <logpath>%BASE%\logs</logpath>
+    <log mode="reset"/>
+
+    <stoptimeout>15sec</stoptimeout>
+
+    <!-- java 1) found in %PATH%
+-->
+    <executable>java</executable>
+
+    <!-- or java 2) found in explicit place
+    <executable>C:\Program Files\Java\jdk-9.0.4\bin\java</executable>
+    -->
+
+    <!-- memory default -->
+    <argument>-Xms512m</argument>
+    <argument>-Xmx512m</argument>
+    <argument>-Dfile.encoding=UTF-8</argument>
+
+    <argument>-server</argument>
+    <argument>-jar</argument>
+    <argument>wildfly-reader.jar</argument>
+</configuration>
