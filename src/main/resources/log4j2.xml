@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Configuration status="off">
+	<Properties>
+		<Property name="LOG_EXCEPTION_CONVERSION_WORD">%xwEx</Property>
+		<Property name="LOG_DATEFORMAT_PATTERN">yyyy-MM-dd HH:mm:ss.SSS</Property>
+		<Property name="LOG_LEVEL_PATTERN">%5p</Property>
+		<!--<Property name="pattern">%d{${LOG_DATEFORMAT_PATTERN}} ${LOG_LEVEL_PATTERN} -&#45;&#45; [%20.20t] %-40.40c{1.} %4line : %m%n${sys:LOG_EXCEPTION_CONVERSION_WORD}</Property>-->
+		<Property name="pattern">%d{${LOG_DATEFORMAT_PATTERN}} ${LOG_LEVEL_PATTERN} --- [%20.20t] %-40.40c{1.} %4X{loggerLine} : %m%n</Property>
+		<Property name="consoleThreshold">${sys:logger.console.threshold:-${:envlogger.console.threshold:-${env:LOGGER_CONSOLE_THRESHOLD:-INFO}}}</Property>
+		<Property name="includeLocation">${sys:logger.include.location:-${env:logger.include.location:-${env:LOGGER_INCLUDE_LOCATION:-TRUE}}}</Property>
+		<Property name="levelSimpleway">${sys:logger.level.simpleway:-${env:logger.level.simpleway:-${env:LOGGER_LEVEL_SIMPLEWAY:-DEBUG}}}</Property>
+		<Property name="levelRoot">${sys:logger.level.root:-${env:logger.level.root:-${env:LOGGER_LEVEL_ROOT:-INFO}}}</Property>
+	</Properties>
+	<Appenders>
+		<Console name="console">
+			<PatternLayout pattern="${pattern}"/>
+			<ThresholdFilter level="${consoleThreshold}" onMatch="ACCEPT" onMismatch="DENY"/>
+		</Console>
+		<ChunkSocketAppender name="socket" protocol="UDP">
+			<JsonLayout complete="false" properties="true" locationInfo="${includeLocation}" stacktraceAsString="true" compact="false">
+				<KeyValuePair key="applicationId" value="$${sys:application.id:-${env:application.id:-${env:APPLICATION_ID:-unknown}}}"/>
+				<KeyValuePair key="started" value="${sys:logger.system.started:-${date:yyyy-MM-dd___HH-mm-ss}}"/>
+			</JsonLayout>
+		</ChunkSocketAppender>
+	</Appenders>
+	<Loggers>
+		<logger includeLocation="${includeLocation}" name="cz.sw" level="${levelSimpleway}"/>
+		<logger includeLocation="${includeLocation}" name="global.simpleway" level="${levelSimpleway}"/>
+		<!-- Spring is logging on behalf of child name -->
+		<logger includeLocation="${includeLocation}" name="cz.sw.upis.server.http.handler" level="${levelRoot}"/>
+		<Root includeLocation="${includeLocation}" level="${levelRoot}">
+			<AppenderRef ref="socket"/>
+			<AppenderRef ref="console"/>
+		</Root>
+	</Loggers>
+</Configuration>

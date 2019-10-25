@@ -1,7 +1,6 @@
 package global.simpleway.wildfly;
 
 import java.util.Properties;
-import java.util.logging.Logger;
 
 import javax.jms.Connection;
 import javax.jms.ConnectionFactory;
@@ -16,11 +15,14 @@ import javax.jms.TextMessage;
 import javax.naming.Context;
 import javax.naming.InitialContext;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import global.simpleway.wildfly.config.Settings;
 import global.simpleway.wildfly.config.SettingsReader;
 
 public class MessageReceiver implements MessageListener {
-	private static final Logger log = Logger.getLogger(MessageReceiver.class.getName());
+	private static final Logger log = LoggerFactory.getLogger(MessageReceiver.class.getName());
 
 	// Set up all the default values
 	private static final String DEFAULT_CONNECTION_FACTORY = "jms/RemoteConnectionFactory";
@@ -100,7 +102,7 @@ public class MessageReceiver implements MessageListener {
 			if(connection != null) connection.close();
 */
 		} catch (Exception e) {
-			log.severe(e.getMessage());
+			log.error(e.getMessage());
 			throw e;
 		}
 	}
@@ -110,12 +112,9 @@ public class MessageReceiver implements MessageListener {
 		try {
 			String msgText;
 			if (msg instanceof TextMessage) {
-					activeMQSender.sendMessage((TextMessage) msg);
-				msgText = ((TextMessage) msg).getText();
-			} else {
-				msgText = msg.toString();
+				log.info("Message received: " + ((TextMessage) msg).getText());
+				activeMQSender.sendMessage((TextMessage) msg);
 			}
-			log.info("Message received: " + msgText);
 		} catch (JMSException jmse) {
 			jmse.printStackTrace();
 		}

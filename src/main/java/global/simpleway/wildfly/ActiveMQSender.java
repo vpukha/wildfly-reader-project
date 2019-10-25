@@ -1,7 +1,5 @@
 package global.simpleway.wildfly;
 
-import java.util.logging.Logger;
-
 import javax.jms.Connection;
 import javax.jms.ConnectionFactory;
 import javax.jms.Destination;
@@ -11,11 +9,13 @@ import javax.jms.Session;
 import javax.jms.TextMessage;
 
 import org.apache.activemq.ActiveMQConnectionFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import global.simpleway.wildfly.config.Settings;
 
 public class ActiveMQSender {
-	private static final Logger log = Logger.getLogger(ActiveMQSender.class.getName());
+	private static final Logger log = LoggerFactory.getLogger(ActiveMQSender.class.getName());
 
 	MessageProducer producer;
 
@@ -63,7 +63,6 @@ public class ActiveMQSender {
 
 	public void sendMessage(TextMessage msg) throws JMSException {
 		producer.send(msg);
-		log.info("Message is sent to ActiveMQ:  " +msg);
-
+		log.info("Message is sent to ActiveMQ: {} ", msg);
 	}
 }

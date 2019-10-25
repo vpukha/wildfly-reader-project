@@ -1,4 +1,4 @@
-package global.simpleway.wildfly.config;
+package global.simpleway.logger;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -13,7 +13,7 @@ import org.apache.logging.log4j.Logger;
  * Intercept {@link System#out} and {@link System#err} calls and direct then to the logger.
  * Must be called first to avoid creating 2x folders with different timestamps
  * @author mzachar
- *
+ * 
  */
 /* package */final class SystemOutInterceptor {
 	private SystemOutInterceptor() {

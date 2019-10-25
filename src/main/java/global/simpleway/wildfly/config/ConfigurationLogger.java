@@ -2,10 +2,12 @@ package global.simpleway.wildfly.config;
 
 import java.util.Formatter;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 public class ConfigurationLogger {
 
-	private static final java.util.logging.Logger log = java.util.logging.Logger.getLogger(ConfigurationLogger.class.getName());
-
+	private static final Logger log = LoggerFactory.getLogger(ConfigurationLogger.class.getName());
 
 	public static void logConfigurationInfo(SettingsReader reader) {
 		Formatter formatter = new Formatter();

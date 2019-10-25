@@ -1,6 +1,5 @@
 package global.simpleway.wildfly.config;
 
-import static global.simpleway.wildfly.config.Settings.INTERNAL_LOGGER_PREFIX;
 
 import java.io.File;
 import java.io.InputStream;
@@ -17,7 +16,7 @@ import org.slf4j.LoggerFactory;
 
 public class SettingsReader {
 
-	private static final Logger logger = LoggerFactory.getLogger(INTERNAL_LOGGER_PREFIX + SettingsReader.class);
+	private static final Logger logger = LoggerFactory.getLogger(SettingsReader.class);
 
 	private final Properties configFile;
 	private final Path baseDir;
@@ -44,7 +43,7 @@ public class SettingsReader {
 		settings.wildFlyUsername = readString("wildfly.username","admin");
 		settings.wildFlyPassword = readString("wildfly.password", "admin");
 		settings.wildFlyQueue = readString("wildfly.queue", "queue");
-		settings.wildFlyTopic= readString("wildfly.topic", "MyTopic");
+		settings.wildFlyTopic = readString("wildfly.topic", "MyTopic");
 		return settings;
 	}
 
