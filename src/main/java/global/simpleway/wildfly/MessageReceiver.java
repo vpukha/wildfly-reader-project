@@ -18,8 +18,6 @@ import javax.naming.InitialContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import global.simpleway.wildfly.config.Settings;
-import global.simpleway.wildfly.config.SettingsReader;
 
 public class MessageReceiver implements MessageListener {
 	private static final Logger log = LoggerFactory.getLogger(MessageReceiver.class.getName());
@@ -28,26 +26,13 @@ public class MessageReceiver implements MessageListener {
 	private static final String DEFAULT_CONNECTION_FACTORY = "jms/RemoteConnectionFactory";
 	private static final String INITIAL_CONTEXT_FACTORY = "org.jboss.naming.remote.client.InitialContextFactory";
 
-	private final String topic;
-	private final String username;
-	private final String password;
-	private final String providerUrl;
-
-	SettingsReader settingsReader = new SettingsReader();
-	Settings settings = settingsReader.read();
-	ActiveMQSender activeMQSender = new ActiveMQSender(settings);
-
-	public MessageReceiver(Settings settings) throws JMSException {
-		this.topic = "jms/topic/" + settings.wildFlyTopic;
-		this.username = settings.wildFlyUsername;
-		this.password = settings.wildFlyPassword;
-		this.providerUrl = "http-remoting://" + settings.wildFlyUrl;
-		activeMQSender.activeMqSubscribe();
-	}
+	WildflyReaderProperties properties = new WildflyReaderProperties().getInstance();
+	ActiveMQSender activeMQSender;
 
 
-	public void wildFlySubscribe() throws Exception {
 
+	public void wildFlySubscribe(String source, String dest) throws Exception {
+		activeMQSender = new ActiveMQSender(dest);
 		ConnectionFactory connectionFactory = null;
 		Connection connection = null;
 		Session session = null;
@@ -61,11 +46,11 @@ public class MessageReceiver implements MessageListener {
 			// Set up the context for the JNDI lookup
 			final Properties env = new Properties();
 			env.put(Context.INITIAL_CONTEXT_FACTORY, INITIAL_CONTEXT_FACTORY);
-			env.put(Context.PROVIDER_URL, System.getProperty(Context.PROVIDER_URL, providerUrl));
-			env.put(Context.SECURITY_PRINCIPAL, System.getProperty("username", username));
-			env.put(Context.SECURITY_CREDENTIALS, System.getProperty("password", password));
+			env.put(Context.PROVIDER_URL, System.getProperty(Context.PROVIDER_URL, "http-remoting://" + properties.getWildFlyUrl()));
+			env.put(Context.SECURITY_PRINCIPAL, System.getProperty("username", properties.getWildFlyUsername()));
+			env.put(Context.SECURITY_CREDENTIALS, System.getProperty("password", properties.getWildFlyPassword()));
 			env.put("jboss.naming.client.connect.timeout", "10000");
-
+			log.info("Environment \"" + env.toString() + "\"");
 			context = new InitialContext(env);
 
 			// Perform the JNDI lookups
@@ -74,23 +59,20 @@ public class MessageReceiver implements MessageListener {
 			connectionFactory = (ConnectionFactory) context.lookup(connectionFactoryString);
 			log.info("Found connection factory \"" + connectionFactoryString + "\" in JNDI");
 
-			String destinationString = System.getProperty("destination", this.topic);
+			String destinationString = System.getProperty("destination",  "jms/topic/" + source);
 			log.info("Attempting to acquire destination \"" + destinationString + "\"");
 			destination = (Destination) context.lookup(destinationString);
 			log.info("Found destination \"" + destinationString + "\" in JNDI");
 
 			// Create the JMS connection, session, producer, and consumer
-			connection = connectionFactory.createConnection(System.getProperty("username", this.username), System.getProperty("password", password));
+			connection = connectionFactory.createConnection(System.getProperty("username", properties.getWildFlyUsername()), System.getProperty("password", properties.getWildFlyPassword()));
 			session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
 			//  producer = session.createProducer(destination);
 			consumer = session.createConsumer(destination);
 
+			MessageReceiver messageReceiver = new MessageReceiver();
 
-			SettingsReader settingsReader = new SettingsReader();
-			Settings settings = settingsReader.read();
-			MessageReceiver messageReceiver = new MessageReceiver(settings);
-
-			consumer.setMessageListener(messageReceiver);
+			consumer.setMessageListener(this);
 			connection.start();
 
 			//Close JNDI context
@@ -102,15 +84,15 @@ public class MessageReceiver implements MessageListener {
 			if(connection != null) connection.close();
 */
 		} catch (Exception e) {
-			log.error(e.getMessage());
+			log.error(String.valueOf(e));
 			throw e;
 		}
+		//activeMQSender.activeMqSubscribe(dest);
 	}
 
 
 	public void onMessage(Message msg) {
 		try {
-			String msgText;
 			if (msg instanceof TextMessage) {
 				log.info("Message received: " + ((TextMessage) msg).getText());
 				activeMQSender.sendMessage((TextMessage) msg);
