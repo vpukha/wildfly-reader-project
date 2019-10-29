@@ -1,7 +1,6 @@
 package global.simpleway.wildfly;
 
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
 import java.util.stream.StreamSupport;
 
@@ -17,7 +16,6 @@ import org.springframework.core.env.Environment;
 import org.springframework.core.env.MutablePropertySources;
 import org.springframework.stereotype.Component;
 
-
 @Component
 public class Connector {
 
@@ -29,20 +27,6 @@ public class Connector {
 	@EventListener(ApplicationReadyEvent.class)
 	public void doSomethingAfterStartup() throws Exception {
 		Logger logger = LoggerFactory.getLogger(WildflyReaderApplication.class);
-
-
-		while (true) {
-			try {
-				connectAndSubscribe();
-			} catch (Exception e) {
-				logger.warn("Uncaught exception occurred, trying again .... ", e);
-				Thread.sleep(10_0000);
-			}
-		}
-	}
-
-	private static void connectAndSubscribe() throws Exception {
-
 		WildflyReaderProperties properties = new WildflyReaderProperties().getInstance();
 
 		List<String> sources = properties.wildFlyTopic;
@@ -54,15 +38,33 @@ public class Connector {
 		for (int i = 0; i < sources.size(); i++) {
 			String sourceTopic = sources.get(i);
 			String destinationTopic = destinations.get(i);
-			logger.info("Trying to make connection: from {} to {} ", sourceTopic, destinationTopic);
-			MessageReceiver messageReceiver = new MessageReceiver();
-			messageReceiver.wildFlySubscribe(sourceTopic, destinationTopic);
-		}
-
-
-
-		//we want to have high severity
+			new Thread(() -> connectAndSubscribeAndRetry(sourceTopic, destinationTopic), "bridge-"+sourceTopic+":"+destinationTopic).start();
+		}        //we want to have high severity
 		LoggerFactory.getLogger(WildflyReaderApplication.class).warn("Wildfly-reader server started");
+	}
+
+	private static void connectAndSubscribeAndRetry(String sourceTopic, String destinationTopic) {
+		while (true) {
+			try {
+				logger.info("Trying to make connection: from {} to {} ", sourceTopic, destinationTopic);
+
+				//new WildFlyReceiver().wildFlySubscribe(sourceTopic, destinationTopic);
+				WildFlyReceiver wildFlyReceiver = new WildFlyReceiver(sourceTopic);
+				ActiveMQSender activeMQSender = new ActiveMQSender(destinationTopic);
+				Pipeline pipeline = new Pipeline(wildFlyReceiver, activeMQSender);
+				pipeline.connectAndBlock();
+
+				//create activemq sender, create wildfly receiver, create pipeline - which will connect sender and receiver via listener(setListener)
+				// on bridge call start/ connect , which will delegate start/connect to sender and then to receiver
+			} catch (Exception e) {
+				logger.warn("Uncaught exception occurred, trying again .... ", e);
+				try {
+					Thread.sleep(10_0000);
+				} catch (InterruptedException e1) {
+					logger.info("Sleep interrupted ", e1);
+				}
+			}
+		}
 	}
 
 	@EventListener

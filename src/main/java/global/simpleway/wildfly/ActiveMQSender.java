@@ -16,43 +16,16 @@ public class ActiveMQSender {
 	private static final Logger log = LoggerFactory.getLogger(ActiveMQSender.class.getName());
 
 	MessageProducer producer;
-	WildflyReaderProperties properties = new WildflyReaderProperties().getInstance();
+	private final String fullDestinationTopic;
 
-    public ActiveMQSender(String dest){
-		try {
-			ConnectionFactory connectionFactory;
-			log.info("Establishing ActiveMQ connection to {} ", properties.getActiveMqUrl());
+	public ActiveMQSender(String destinationTopic){
+		WildflyReaderProperties properties = new WildflyReaderProperties().getInstance();
+		this.fullDestinationTopic = destinationTopic;
 
-			if (properties.getActiveMqUsername() != null) {
-				connectionFactory = new ActiveMQConnectionFactory(properties.getActiveMqUsername(), properties.getActiveMqPassword(), "tcp://" + properties.getActiveMqUrl());
-			} else {
-				connectionFactory = new ActiveMQConnectionFactory("tcp://" + properties.getActiveMqUrl());
-			}
-			Connection connection = null;
-			connection = connectionFactory.createConnection();
-
-			log.info("Found ActiveMQ connection factory");
-
-			connection.start();
-			log.info("ActiveMQ connection started");
-			//Creating a non transactional session to send/receive JMS message.
-			Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
-			log.info("ActiveMQ session created");
-
-			Destination destination = session.createQueue(dest);
-
-			log.info("ActiveMQ connected to queue: {} ", dest);
-
-			// MessageProducer is used for sending messages to the queue.
-			producer = session.createProducer(destination);
-			log.info("ActiveMQ producer created");
-		}
-		catch (JMSException e) {
-				e.printStackTrace();
-			}
 	}
 
-	public void activeMqSubscribe(String dest) throws JMSException {
+	public void connect() throws JMSException {
+		WildflyReaderProperties properties = new WildflyReaderProperties().getInstance();
 		// Getting JMS connection from the server and starting it
 		ConnectionFactory connectionFactory;
 		log.info("Establishing ActiveMQ connection to {} ", properties.getActiveMqUrl());
@@ -72,16 +45,16 @@ public class ActiveMQSender {
 		Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
 		log.info("ActiveMQ session created");
 
-		Destination destination = session.createQueue(dest);
+		Destination destination = session.createQueue(fullDestinationTopic);
 
-		log.info("ActiveMQ connected to queue: {} ", dest);
+		log.info("ActiveMQ connected to queue: {} ", fullDestinationTopic);
 
 		// MessageProducer is used for sending messages to the queue.
 		producer = session.createProducer(destination);
 		log.info("ActiveMQ producer created");
 	}
 
-	public void sendMessage(TextMessage msg) throws JMSException {
+	public void send(TextMessage msg) throws JMSException {
 		producer.send(msg);
 		log.info("Message is sent to ActiveMQ: {} ", msg);
 	}

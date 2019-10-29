@@ -31,7 +31,7 @@ public class WildflyReaderProperties {
 
 	public List<String> activeMqTopic = Collections.singletonList("topic");
 
-	public String wildFlyUrl = "localhost:8080";
+	public String wildFlyUrl = "http-remoting://localhost:8080";
 
 	public List<String> wildFlyTopic = Collections.singletonList("MyTopic");
 
