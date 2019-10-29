@@ -92,7 +92,7 @@ public class WildFlyReceiver implements ExceptionListener {
 				throw new IllegalStateException("Connection already exists, cannot connect");
 			}
 			connection = connectionFactory.createConnection(properties.getWildFlyUsername(), properties.getWildFlyPassword());
-			Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
+			Session session = connection.createSession(false, Session.CLIENT_ACKNOWLEDGE);
 			//  producer = session.createProducer(destination);
 			MessageConsumer consumer = session.createConsumer(destination);
 
