@@ -59,7 +59,7 @@ public class Connector {
 			} catch (Exception e) {
 				logger.warn("Uncaught exception occurred, trying again .... ", e);
 				try {
-					Thread.sleep(10_0000);
+					Thread.sleep(10_000);
 				} catch (InterruptedException e1) {
 					logger.info("Sleep interrupted ", e1);
 				}

@@ -17,6 +17,7 @@ public class ActiveMQSender {
 
 	MessageProducer producer;
 	private final String fullDestinationTopic;
+	private volatile Connection connection;
 
 	public ActiveMQSender(String destinationTopic){
 		WildflyReaderProperties properties = new WildflyReaderProperties().getInstance();
@@ -36,13 +37,16 @@ public class ActiveMQSender {
 		else{
 			connectionFactory = new ActiveMQConnectionFactory("tcp://" + properties.getActiveMqUrl());
 		}
-		Connection connection = connectionFactory.createConnection();
+		if (connection != null) {
+			throw new IllegalStateException("Connection already exists, cannot connect");
+		}
+		connection = connectionFactory.createConnection();
 		log.info("Found ActiveMQ connection factory");
 
 		connection.start();
 		log.info("ActiveMQ connection started");
 		//Creating a non transactional session to send/receive JMS message.
-		Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
+		Session session = connection.createSession(false, Session.CLIENT_ACKNOWLEDGE);
 		log.info("ActiveMQ session created");
 
 		Destination destination = session.createQueue(fullDestinationTopic);
@@ -57,5 +61,9 @@ public class ActiveMQSender {
 	public void send(TextMessage msg) throws JMSException {
 		producer.send(msg);
 		log.info("Message is sent to ActiveMQ: {} ", msg);
+	}
+
+	public void close() throws JMSException {
+		connection.close();
 	}
 }

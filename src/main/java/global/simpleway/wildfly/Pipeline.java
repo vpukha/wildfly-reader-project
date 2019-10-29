@@ -2,9 +2,7 @@ package global.simpleway.wildfly;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import javax.jms.JMSException;
-import javax.jms.Message;
 import javax.jms.MessageConsumer;
-import javax.jms.MessageListener;
 import javax.jms.TextMessage;
 import javax.naming.NamingException;
 
@@ -18,6 +16,7 @@ public class Pipeline {
 	WildFlyReceiver wildFlyReceiver;
 	ActiveMQSender activeMQSender;
 	MessageConsumer consumer;
+	private final AtomicBoolean block = new AtomicBoolean(true);
 
 	public Pipeline(WildFlyReceiver wildFlyReceiver, ActiveMQSender activeMQSender) throws Exception {
 		this.wildFlyReceiver = wildFlyReceiver;
@@ -33,16 +32,24 @@ public class Pipeline {
 				}
 				try {
 					activeMQSender.send((TextMessage) msg);
+					msg.acknowledge();
 				} catch (JMSException e) {
 
 					//TODO hadle reconnect ...
 					//probalby disconnect wildFlyReceiver
 					try {
-						wildFlyReceiver.pauseReceiving();
+						wildFlyReceiver.close();
+							//TODO do a activeMQSender#send retry in different thread
+					} catch (JMSException e1) {
+						log.warn("Cannot close wildFly connection", e);
+					}
+					try {
+						activeMQSender.close();
 						//TODO do a activeMQSender#send retry in different thread
 					} catch (JMSException e1) {
-						log.warn("Cannot pause wildFly subscription", e);
+						log.warn("Cannot close activeMQ connection", e);
 					}
+					block.set(false);
 				}
 			}
 		});
@@ -52,14 +59,15 @@ public class Pipeline {
 	public void connectAndBlock() throws NamingException, JMSException {
 		this.activeMQSender.connect();
 		this.wildFlyReceiver.connect();
-		while (true) {
+		while (block.get()) {
 			try {
 				log.debug("Still running");
-				Thread.sleep(60_000);
+				Thread.sleep(5_000);
 			} catch (InterruptedException e) {
 				log.debug("Waked up from sleeping");
 			}
 		}
+		log.info("Pipeline has ended");
 	}
 
 	//

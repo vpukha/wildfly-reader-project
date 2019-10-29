@@ -7,11 +7,9 @@ import javax.jms.ConnectionFactory;
 import javax.jms.Destination;
 import javax.jms.ExceptionListener;
 import javax.jms.JMSException;
-import javax.jms.Message;
 import javax.jms.MessageConsumer;
 import javax.jms.MessageListener;
 import javax.jms.Session;
-import javax.jms.TextMessage;
 import javax.naming.Context;
 import javax.naming.InitialContext;
 import javax.naming.NamingException;
@@ -144,6 +142,10 @@ public class WildFlyReceiver implements ExceptionListener {
 		} catch (JMSException | RuntimeException e) {
 			log.warn("Cannot start connection in exception handler ", e);
 		}
+	}
+
+	public void close() throws JMSException {
+		connection.close();
 	}
 
 	//	@Override
