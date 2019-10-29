@@ -22,8 +22,7 @@
     <argument>-Xms512m</argument>
     <argument>-Xmx512m</argument>
     <argument>-Dfile.encoding=UTF-8</argument>
-
     <argument>-server</argument>
     <argument>-jar</argument>
-    <argument>wildfly-reader.jar</argument>
+    <argument>ats-wildfly-reader-1.0.0.jar</argument>
 </configuration>
