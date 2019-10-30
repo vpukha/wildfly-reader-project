@@ -32,14 +32,14 @@ public class Connector {
 		List<String> sources = properties.wildFlyTopic;
 		List<String> destinations = properties.activeMqQueue;
 		if (sources.size() != destinations.size()) {
-			throw new IllegalStateException("sources.size() != destinations.size()"); //TODO
+			throw new IllegalStateException("sources.size() != destinations.size()");
 		}
 
 		for (int i = 0; i < sources.size(); i++) {
 			String sourceTopic = sources.get(i);
 			String destinationTopic = destinations.get(i);
 			new Thread(() -> connectAndSubscribeAndRetry(sourceTopic, destinationTopic), "bridge-"+sourceTopic+":"+destinationTopic).start();
-		}        //we want to have high severity
+		}
 		LoggerFactory.getLogger(WildflyReaderApplication.class).warn("Wildfly-reader server started");
 	}
 
@@ -47,15 +47,10 @@ public class Connector {
 		while (true) {
 			try {
 				logger.info("Trying to make connection: from {} to {} ", sourceTopic, destinationTopic);
-
-				//new WildFlyReceiver().wildFlySubscribe(sourceTopic, destinationTopic);
 				WildFlyReceiver wildFlyReceiver = new WildFlyReceiver(sourceTopic);
 				ActiveMQSender activeMQSender = new ActiveMQSender(destinationTopic);
 				Pipeline pipeline = new Pipeline(wildFlyReceiver, activeMQSender);
 				pipeline.connectAndBlock();
-
-				//create activemq sender, create wildfly receiver, create pipeline - which will connect sender and receiver via listener(setListener)
-				// on bridge call start/ connect , which will delegate start/connect to sender and then to receiver
 			} catch (Exception e) {
 				logger.warn("Uncaught exception occurred, trying again .... ", e);
 				try {
