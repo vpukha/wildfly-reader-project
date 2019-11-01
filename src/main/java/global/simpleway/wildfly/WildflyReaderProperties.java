@@ -41,7 +41,6 @@ public class WildflyReaderProperties {
 
 	public String wildFlyPassword = "admin";
 
-
 	public String getActiveMqUrl() {
 		return activeMqUrl;
 	}
@@ -97,6 +96,7 @@ public class WildflyReaderProperties {
 	public void setWildFlyPassword(String wildFlyPassword) {
 		this.wildFlyPassword = wildFlyPassword;
 	}
+
 	public List<String> getWildFlyTopic() {
 		return wildFlyTopic;
 	}
@@ -104,7 +104,6 @@ public class WildflyReaderProperties {
 	public void setWildFlyTopic(List<String> wildFlyTopic) {
 		this.wildFlyTopic = wildFlyTopic;
 	}
-
 
 	public List<String> getActiveMqQueue() {
 		return activeMqQueue;

@@ -17,14 +17,12 @@ import javax.naming.NamingException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-
 public class WildFlyReceiver implements ExceptionListener {
-	private static final Logger log = LoggerFactory.getLogger(WildFlyReceiver.class.getName());
+	private static final Logger logger = LoggerFactory.getLogger(WildFlyReceiver.class);
 
 	// Set up all the default values
 	private static final String DEFAULT_CONNECTION_FACTORY = "jms/RemoteConnectionFactory";
 	private static final String INITIAL_CONTEXT_FACTORY = "org.jboss.naming.remote.client.InitialContextFactory";
-
 
 	private final String fullTopicName;
 	private final ConnectionFactory connectionFactory;
@@ -33,9 +31,8 @@ public class WildFlyReceiver implements ExceptionListener {
 	private volatile Connection connection;
 	private Runnable closeListener;
 
-
 	public WildFlyReceiver(String topicName) throws NamingException {
-		WildflyReaderProperties properties = new WildflyReaderProperties().getInstance();
+		WildflyReaderProperties properties = WildflyReaderProperties.getInstance();
 		final Properties env = new Properties();
 		// Set up the context for the JNDI lookup
 		env.put(Context.INITIAL_CONTEXT_FACTORY, INITIAL_CONTEXT_FACTORY);
@@ -43,14 +40,14 @@ public class WildFlyReceiver implements ExceptionListener {
 		env.put(Context.SECURITY_PRINCIPAL, properties.getWildFlyUsername());
 		env.put(Context.SECURITY_CREDENTIALS, properties.getWildFlyPassword());
 		env.put("jboss.naming.client.connect.timeout", "10000");
-		log.info("Environment \"" + env.toString() + "\"");
+		logger.info("Environment {}", env.toString());
 		// Perform the JNDI lookups
 		String connectionFactoryString = System.getProperty("connection.factory", DEFAULT_CONNECTION_FACTORY);
 		context = new InitialContext(env);
-		log.info("Attempting to acquire connection factory \"" + connectionFactoryString + "\"");
+		logger.info("Attempting to acquire connection factory {}", connectionFactoryString);
 
 		connectionFactory = (ConnectionFactory) context.lookup(connectionFactoryString);
-		log.info("Found connection factory \"" + connectionFactoryString + "\" in JNDI");
+		logger.info("Found connection factory {}", connectionFactoryString, " in JNDI");
 		this.fullTopicName = "jms/topic/" + topicName;
 	}
 
@@ -67,22 +64,22 @@ public class WildFlyReceiver implements ExceptionListener {
 
 	public void connect() throws JMSException, NamingException {
 
-			log.info("Attempting to acquire destination \"" + fullTopicName + "\"");
-			Destination destination = (Destination) context.lookup(fullTopicName);
-			// Create the JMS connection, session, producer, and consumer
-			WildflyReaderProperties properties = new WildflyReaderProperties().getInstance();
-			if (connection != null) {
-				throw new IllegalStateException("Connection already exists, cannot connect");
-			}
-			connection = connectionFactory.createConnection(properties.getWildFlyUsername(), properties.getWildFlyPassword());
-			Session session = connection.createSession(false, Session.CLIENT_ACKNOWLEDGE);
-			MessageConsumer consumer = session.createConsumer(destination);
+		logger.info("Attempting to acquire destination {}", fullTopicName);
+		Destination destination = (Destination) context.lookup(fullTopicName);
+		// Create the JMS connection, session, producer, and consumer
+		WildflyReaderProperties properties = WildflyReaderProperties.getInstance();
+		if (connection != null) {
+			throw new IllegalStateException("Connection already exists, cannot connect");
+		}
+		connection = connectionFactory.createConnection(properties.getWildFlyUsername(), properties.getWildFlyPassword());
+		Session session = connection.createSession(false, Session.CLIENT_ACKNOWLEDGE);
+		MessageConsumer consumer = session.createConsumer(destination);
 
-			if (messageListener != null) {
-				consumer.setMessageListener(messageListener);
-			}
-			connection.setExceptionListener(this);
-			connection.start();
+		if (messageListener != null) {
+			consumer.setMessageListener(messageListener);
+		}
+		connection.setExceptionListener(this);
+		connection.start();
 	}
 
 	@Override
@@ -90,7 +87,7 @@ public class WildFlyReceiver implements ExceptionListener {
 		try {
 			Thread.sleep(1_000);
 		} catch (InterruptedException e) {
-			log.warn("Interrupted from sleeping in exception handler");
+			logger.warn("Interrupted from sleeping in exception handler");
 		}
 		try {
 			connection.close();
@@ -98,7 +95,7 @@ public class WildFlyReceiver implements ExceptionListener {
 				closeListener.run();
 			}
 		} catch (JMSException | RuntimeException e) {
-			log.warn("Cannot start connection in exception handler, trying again ", e);
+			logger.warn("Cannot start connection in exception handler, trying again ", e);
 
 		}
 	}

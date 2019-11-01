@@ -2,7 +2,6 @@ package global.simpleway.logger;
 
 import java.util.Map;
 
-
 public class LogProperties {
 
 	private static final String LOG_SERVER_PORT = "logger.server.port";

@@ -12,8 +12,8 @@ import org.apache.logging.log4j.Logger;
 /**
  * Intercept {@link System#out} and {@link System#err} calls and direct then to the logger.
  * Must be called first to avoid creating 2x folders with different timestamps
+ *
  * @author mzachar
- * 
  */
 /* package */final class SystemOutInterceptor {
 	private SystemOutInterceptor() {
@@ -23,7 +23,7 @@ import org.apache.logging.log4j.Logger;
 	public static void intercept() {
 		// once logback is logging directly we can safely intercept
 		System.setOut(new LoggingPrintStream("system.out", Level.INFO));
-		System.setErr(new LoggingPrintStream("system.err",  Level.WARN));
+		System.setErr(new LoggingPrintStream("system.err", Level.WARN));
 	}
 }
 

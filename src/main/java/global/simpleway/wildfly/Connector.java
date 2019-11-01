@@ -26,8 +26,7 @@ public class Connector {
 
 	@EventListener(ApplicationReadyEvent.class)
 	public void doSomethingAfterStartup() throws Exception {
-		Logger logger = LoggerFactory.getLogger(WildflyReaderApplication.class);
-		WildflyReaderProperties properties = new WildflyReaderProperties().getInstance();
+		WildflyReaderProperties properties = WildflyReaderProperties.getInstance();
 
 		List<String> sources = properties.wildFlyTopic;
 		List<String> destinations = properties.activeMqQueue;
@@ -38,12 +37,12 @@ public class Connector {
 		for (int i = 0; i < sources.size(); i++) {
 			String sourceTopic = sources.get(i);
 			String destinationTopic = destinations.get(i);
-			new Thread(() -> connectAndSubscribeAndRetry(sourceTopic, destinationTopic), "bridge-"+sourceTopic+":"+destinationTopic).start();
+			new Thread(() -> connectAndSubscribeAndRetry(sourceTopic, destinationTopic), "bridge-" + sourceTopic + ":" + destinationTopic).start();
 		}
-		LoggerFactory.getLogger(WildflyReaderApplication.class).warn("Wildfly-reader server started");
+		logger.warn("Wildfly-reader server started");
 	}
 
-	private static void connectAndSubscribeAndRetry(String sourceTopic, String destinationTopic) {
+	private void connectAndSubscribeAndRetry(String sourceTopic, String destinationTopic) {
 		while (true) {
 			try {
 				logger.info("Trying to make connection: from {} to {} ", sourceTopic, destinationTopic);
